@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+<log4j:configuration xmlns:log4j='http://jakarta.apache.org/log4j/'>
+	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+		<param name="threshold" value="info" />
+		<param name="encoding" value="UTF-8" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m%n"/>
+		</layout>
+	</appender>
+	<appender name="debugfile" class="org.apache.log4j.rolling.RollingFileAppender">
+		<param name="append" value="true" />
+		<param name="encoding" value="UTF-8" />
+		<!-- Rollover at midnight each day -->
+		<rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
+        	<param name="FileNamePattern" value="log/debug.log.%d{yyyy-MM-dd}"/>
+        	<!-- param name="ActiveFileName" value="log/debug.log"/ -->
+     	</rollingPolicy>
+		<layout class="org.apache.log4j.EnhancedPatternLayout">
+	        <param name="ConversionPattern" value="%d{yyyy-MMM-dd HH:mm:ss,SSS} %-5p [%c:%L] - %m%n" />
+    	</layout>
+    	<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMin" value="DEBUG" />
+		</filter>
+	</appender>
+	<appender name="infofile" class="org.apache.log4j.rolling.RollingFileAppender">
+		<param name="append" value="true" />
+		<param name="encoding" value="UTF-8" />
+		<!-- Rollover at midnight each day -->
+		<rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
+        	<param name="FileNamePattern" value="log/info.log.%d{yyyy-MM-dd}"/>
+        	<!-- param name="ActiveFileName" value="log/info.log"/ -->
+     	</rollingPolicy>
+		<layout class="org.apache.log4j.EnhancedPatternLayout">
+	        <param name="ConversionPattern" value="%d{yyyy-MMM-dd HH:mm:ss,SSS} %-5p [%c:%L] - %m%n" />
+    	</layout>
+    	<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMin" value="INFO" />
+		</filter>
+	</appender>
+	<appender name="errorfile" class="org.apache.log4j.rolling.RollingFileAppender">
+		<param name="append" value="true" />
+		<param name="encoding" value="UTF-8" />
+		<!-- Rollover at midnight each day -->
+		<rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
+        	<param name="FileNamePattern" value="log/error.log.%d{yyyy-MM-dd}"/>
+        	<!-- param name="ActiveFileName" value="log/error.log"/ -->
+     	</rollingPolicy>
+		<layout class="org.apache.log4j.EnhancedPatternLayout">
+	        <param name="ConversionPattern" value="%d{yyyy-MMM-dd HH:mm:ss,SSS} %-5p [%c:%L] - %m%n" />
+    	</layout>
+    	<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMin" value="ERROR" />
+		</filter>
+	</appender>
+	<appender name="consolefile" class="org.apache.log4j.rolling.RollingFileAppender">
+		<param name="append" value="true" />
+		<param name="encoding" value="UTF-8" />
+		<rollingPolicy class="org.apache.log4j.rolling.FixedWindowRollingPolicy">
+        	<param name="FileNamePattern" value="log/console.log.%i"/>
+        	<!-- param name="ActiveFileName" value="log/console.log"/ -->
+        	<param name="minIndex" value="1"/>
+        	<param name="maxIndex" value="5"/>
+     	</rollingPolicy>
+		<triggeringPolicy class="org.apache.log4j.rolling.SizeBasedTriggeringPolicy">
+			<param name="MaxFileSize" value="104857600"/> <!-- 100MB -->
+     	</triggeringPolicy>
+		<layout class="org.apache.log4j.EnhancedPatternLayout">
+	        <param name="ConversionPattern" value="%d{yyyy-MMM-dd HH:mm:ss,SSS} %-5p [%c:%L] - %m%n" />
+    	</layout>
+    	<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMin" value="INFO" />
+		</filter>
+	</appender>
+
+	<category name="fi.jonix">
+		<priority value="debug" />
+		<appender-ref ref="debugfile" />
+		<appender-ref ref="infofile" />
+		<appender-ref ref="errorfile" />
+		<appender-ref ref="stdout" />
+	</category>
+
+	<root>
+		<appender-ref ref="consolefile" />
+	</root>
+</log4j:configuration>

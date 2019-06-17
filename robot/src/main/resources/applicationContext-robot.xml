@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+
+	<!-- Information on transaction propagation -->
+	<!-- PROPAGATION_REQUIRES_NEW starts a new, independent "inner" transaction for the given scope. This transaction will be committed or rolled -->
+	<!-- back completely independent from the outer transaction, having its own isolation scope, its own set of locks, etc. The outer transaction -->
+	<!-- will get suspended at the beginning of the inner one, and resumed once the inner one has completed.                                      -->
+	<!--                                                                                                                                          -->
+	<!-- Such independent inner transactions are for example used for id generation through manual sequences, where the access to the sequence    -->
+	<!-- table should happen in its own transactions, to keep the lock there as short as possible. The goal there is to avoid tying the sequence  -->
+	<!-- locks to the (potentially much longer running) outer transaction, with the sequence lock not getting released before completion of the   -->
+	<!-- outer transaction.                                                                                                                       -->
+	<!--                                                                                                                                          -->
+	<!-- PROPAGATION_NESTED on the other hand starts a "nested" transaction, which is a true subtransaction of the existing one. What will happen -->
+	<!-- is that a savepoint will be taken at the start of the nested transaction. Íf the nested transaction fails, we will roll back to that     -->
+	<!-- savepoint. The nested transaction is part of of the outer transaction, so it will only be committed at the end of of the outer           -->
+	<!-- transaction.                                                                                                                             -->
+	<!--                                                                                                                                          -->
+	<!-- Nested transactions essentially allow to try some execution subpaths as subtransactions: rolling back to the state at the beginning of   -->
+	<!-- the failed subpath, continuing with another subpath or with the main execution path there - all within one isolated transaction, and not -->
+	<!-- losing any previous work done within the outer transaction.                                                                              -->
+	<!--                                                                                                                                          -->
+	<!-- For example, consider parsing a very large input file consisting of account transfer blocks: The entire file should essentially be       -->
+	<!-- parsed within one transaction, with one single commit at the end. But if a block fails, its transfers need to be rolled back, writing a  -->
+	<!-- failure marker somewhere. You could either start over the entire transaction every time a block fails, remembering which blocks to skip  -->
+	<!-- - or you mark each block as a nested transaction, only rolling back that specific set of operations, keeping the previous work of the    -->
+	<!-- outer transaction. The latter is of course much more efficient, in particular when a block at the end of the file fails.                 -->
+	<!--                                                                                                                                          -->
+	<!-- Rolling back the entire transaction is the choice of the demarcation code/config that started the outer transaction.                     -->
+	<!--                                                                                                                                          -->
+	<!-- So if an inner transaction throws an exception and is supposed to be rolled back (according to the rollback rules), the transaction will -->
+	<!-- get rolled back to the savepoint taken at the start of the inner transaction. The immediate calling code can then decide to catch the    -->
+	<!-- exception and proceed down some other path within the outer transaction.                                                                 -->
+	<!--                                                                                                                                          -->
+	<!-- If the code that called the inner transaction lets the exception propagate up the call chain, the exception will eventually reach the    -->
+	<!-- demarcation code of the outer transaction. At that point, the rollback rules of the outer transaction decide whether to trigger a        -->
+	<!-- rollback. That would be a rollback of the entire outer transaction then.                                                                 -->
+	<!--                                                                                                                                          -->
+	<!-- So essentially, it depends on your exception handling. If you catch the exception thrown by the inner transaction, you can proceed down  -->
+	<!-- some other path within the outer transaction. If you let the exception propagate up the call chain, it's eventually gonna cause a        -->
+	<!-- rollback of the entire outer transaction.                                                                                                -->
+	
+	<!-- For getting Autowired to work. -->
+	<context:annotation-config />
+
+	<!-- For getting annotation based spring beans to work. -->
+	<context:component-scan base-package="fi.jonix.huutonet"/>
+	
+	<bean id="getItemCommandHandler" class="fi.jonix.huutonet.commandrow.option.GetItemCommandHandler"/>
+	
+	<bean id="categoryResolverThreadBean" class="fi.jonix.huutonet.tools.CategoryResolverThreadBean"/>
+	
+	<bean id="fillItemCommandHandler" class="fi.jonix.huutonet.commandrow.option.FillItemCommandHandler"/>
+	
+	<bean id="templateTester" class="fi.jonix.huutonet.tools.TemplateTester">
+		<property name="adTemplateDAO" ref="adTemplateDAO" />
+		<property name="adCreator" ref="baseAdCreator" />
+		<property name="settingsDAO" ref="settingsDAO" />
+		<property name="categoryMappingDAO" ref="categoryMappingDAO" />
+		<property name="strategy" ref="strategy" />
+	</bean>
+	
+	<bean id="multiProcessorEmailRobot" class="fi.jonix.huutonet.email.MultiProcessorEmailRobot">
+	</bean>
+
+	<bean id="listers" class="java.util.ArrayList">
+		<constructor-arg>
+			<list>
+				<ref bean="huutonetLister" />
+				<ref bean="mikkoLister" />
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="providerEmailProcessors" class="java.util.ArrayList">
+		<constructor-arg>
+			<list>
+				<ref bean="dxProcessor" />
+				<ref bean="focalPriceProcessor" />
+				<ref bean="hautalaProcessor" />
+				<ref bean="paypalProcessor" />
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="sellerEmailProcessors" class="java.util.ArrayList">
+		<constructor-arg>
+		<!-- Remember to add the GoogleOrderProcessor and OperatorProcessor before the EmailFromCustomerProcessor! -->
+			<list>
+				<ref bean="huutonetProcessor" />
+				<ref bean="mikkoProcessor" />
+				<ref bean="googleOrderProcessor" />
+				<ref bean="operatorProcessor" />
+				<ref bean="emailFromCustomerProcessor" />
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="seleniumRobot" class="fi.jonix.huutonet.robot.SeleniumRobot">
+	</bean>
+	
+	<bean id="finnishPostService" class="fi.jonix.huutonet.post.FinnishPostService"/>
+	
+	<bean id="cheapImageHostingUploader" class="fi.jonix.huutonet.robot.image.CheapImageHostingUploader">
+		<property name="seleniumRobot" ref="seleniumRobot" />
+		<property name="imageDAO" ref="imageDAO" />
+	</bean>
+	
+	<bean id="imageHostUploader" class="fi.jonix.huutonet.robot.image.ImageHostUploader">
+		<property name="seleniumRobot" ref="seleniumRobot" />
+		<property name="imageDAO" ref="imageDAO" />
+	</bean>
+	
+	<bean id="huutonetAdDecorator" class="fi.jonix.huutonet.market.huuto.HuutonetAdDecorator">
+		<property name="imageDAO" ref="imageDAO" />
+		<property name="adDAO" ref="adDAO" />
+		<property name="orderDAO" ref="orderDAO" />
+		<property name="providerDAO" ref="providerDAO" />
+		<property name="productDAO" ref="productDAO" />
+		<property name="categoryDAO" ref="categoryDAO" />
+		<property name="productKeywordDAO" ref="productKeywordDAO" />
+		<property name="productScoreGenerator" ref="productScoreGenerator" />
+	</bean>
+	
+	<bean id="mikkoAdDecorator" class="fi.jonix.huutonet.market.mikko.MikkoAdDecorator">
+		<property name="imageDAO" ref="imageDAO" />
+		<property name="adDAO" ref="adDAO" />
+		<property name="orderDAO" ref="orderDAO" />
+		<property name="providerDAO" ref="providerDAO" />
+		<property name="productDAO" ref="productDAO" />
+		<property name="categoryDAO" ref="categoryDAO" />
+		<property name="productKeywordDAO" ref="productKeywordDAO" />
+		<property name="productScoreGenerator" ref="productScoreGenerator" />
+	</bean>
+	
+	<bean id="huutonetGardeniaDecorator" class="fi.jonix.huutonet.market.huuto.HuutonetGardeniaDecorator">
+		<property name="imageDAO" ref="imageDAO" />
+		<property name="adDAO" ref="adDAO" />
+		<property name="orderDAO" ref="orderDAO" />
+		<property name="providerDAO" ref="providerDAO" />
+		<property name="productDAO" ref="productDAO" />
+		<property name="categoryDAO" ref="categoryDAO" />
+		<property name="productKeywordDAO" ref="productKeywordDAO" />
+		<property name="productScoreGenerator" ref="productScoreGenerator" />
+	</bean>
+	
+	<bean id="imageHelper" class="fi.jonix.huutonet.tools.ImageHelper">
+		<property name="productDAO" ref="productDAO" />
+		<property name="imageUploader" ref="cheapImageHostingUploader" />
+		<property name="usedImageUploaders">
+        	<list>
+                <ref bean="cheapImageHostingUploader" />
+                <ref bean="imageHostUploader" />
+        	</list>
+		</property>
+	</bean>
+	
+	<bean id="huutonetFeedbackGiver" class="fi.jonix.huutonet.market.huuto.HuutonetFeedbackGiver">
+		<property name="seleniumRobot" ref="seleniumRobot" />
+		<property name="settingsDAO" ref="settingsDAO" />
+		<property name="orderDAO" ref="orderDAO" />
+	</bean>
+	
+	<bean id="huutonetAnswerer" class="fi.jonix.huutonet.market.huuto.HuutonetAnswerer">
+		<property name="seleniumRobot" ref="seleniumRobot" />
+	</bean>
+	
+	<aop:config proxy-target-class="true" />
+
+    <aop:config>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.email.MultiProcessorEmailRobot.*(..))"
+        advice-ref="emailProcessorTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.market.ItemLister.*(..))"
+        advice-ref="itemListerTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.tools.DxProductHelper.*(..))"
+        advice-ref="dxProductHelperTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.bank.BankHelper.*(..))"
+        advice-ref="bankHelperTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.bank.CustomerPaymentInformer.*(..))"
+        advice-ref="customerPaymentInformerTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.tools.ExchangeRateFetcher.*(..))"
+        advice-ref="exchangeRateFetcherTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.order.ProviderHandler.*(..))"
+        advice-ref="providerHandlerProviderTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.tools.TemplateTester.*(..))"
+        advice-ref="templateTesterTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.tools.CmAdCreator.*(..))"
+        advice-ref="cmAdCreatorTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.tools.ImageHelper.*(..))"
+        advice-ref="imageHelperTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.bank.FaultyPaymentFixer.*(..))"
+        advice-ref="faultyPaymentFixerTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.tools.ConsistencyChecker.*(..))"
+        advice-ref="consistencyCheckerTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.tools.CategoryHelper.*(..))"
+        advice-ref="categoryHelperTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.bank.Refunds.*(..))"
+        advice-ref="refundsTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.market.FeedbackGiver.*(..))"
+        advice-ref="feedbackGiverTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.market.FeedbackReader.*(..))"
+        advice-ref="feedbackReaderTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.tools.CategoryResolverThreadBean.*(..))"
+        advice-ref="categoryResolverThreadTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.email.EmailSenderHelper.*(..))"
+        advice-ref="emailSenderHelperTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.post.GeneralPostService.*(..))"
+        advice-ref="generalPostServiceTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.order.OrderBundleHousekeeping.*(..))"
+        advice-ref="housekeepingTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.bank.MoneyTransferer.*(..))"
+        advice-ref="moneyTransfererTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.market.PaidAdsBookkeeper.*(..))"
+        advice-ref="paidAdsBookkeeperTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.tools.ProductScoreGenerator.*(..))"
+        advice-ref="productScoreGeneratorTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.email.OperatorSummaryCreator.*(..))"
+        advice-ref="operatorSummaryCreatorTxAdvice"/>
+    </aop:config>
+    
+    <tx:advice id="emailProcessorTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<!-- Email reading should have the laxer isolation level "read committed" because otherwise it will -->
+      	<!-- bail out when calling sendOperationProblemReport during the email checking. -->
+      	<!-- We use a quite long timeout here, because in some cases FocalPrice is very slow and -->
+      	<!-- requires several reloadings (for new orders we check the currect price at FocalPrice). -->
+      	<!-- The status generation email can take over 30 minutes to generate using a remote database! -->
+      	<tx:method name="processSpecial" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="2700"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="generalPostServiceTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="updateShippingStatus" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="emailSenderHelperTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<!-- Note: IMPORTANT that addPendingEmailSendingInSeparateTransaction and sendEmailInSeparateTransaction are -->
+      	<!-- declared with propagation REQUIRES_NEW and not with REQUIRED. These methods should namely be -->
+      	<!-- called using an inner transaction that won't roll back even if the outer transaction is rolled back. -->
+        <!-- Use a more lax isolation level for addPendingEmailSendingInSeparateTransaction. The reason is that -->
+        <!-- sendOperationProblemReport uses this method and sendOperationProblemReport is sometimes used during -->
+        <!-- email checking, and in that case we always get a "could not serialize access due to concurrent update" error -->
+        <!-- if the isolation level is serializable. -->
+      	<tx:method name="addPendingEmailSendingInSeparateTransaction" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+       	<tx:method name="sendEmailInSeparateTransaction" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="categoryHelperTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+        <!-- Note: the methods in CategoryHelper need to have propagation="REQUIRES_NEW", because they -->
+        <!-- are called from fillitems and we don't want that a rollback in CategoryHelper should mark -->
+        <!-- the fillitems transaction for rollback.                                                   -->
+      	<tx:method name="renameDirectory" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="copyDirectory" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="moveDirectory" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="removeDirectory" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="makeDirectory" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="changeDirectory" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="listFiles" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="findDirectories" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="linkDirectories" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="removeDirectoryLinks" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="runBatch" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="900"/>
+      	<tx:method name="linkBatch" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="1800"/>
+      	<tx:method name="getMarketCategories" read-only="true" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="updateMarketCategories" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="1800"/>
+      	<tx:method name="getSnapshotCategories" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="7200"/>
+      	<tx:method name="returnDirectory" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="moveProducts" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="3600"/>
+      	<tx:method name="createCategorySuggestions" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="3600"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="itemListerTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<!-- Set a quite large timeout for listItem, beacuse sometimes a listing at huutonet -->
+      	<!-- goes through after a _very_ long time. Set isolation level to read commited, because -->
+      	<!-- if set to serializable it sometimes interferes with fillitems. -->
+      	<tx:method name="listItem" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="2700"/>
+      	<tx:method name="payForHighlightedAds" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="600"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="dxProductHelperTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="createNewProduct" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+        <tx:method name="updateTechnicalSpecsOfProduct" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="bankHelperTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="getNewTransactions" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="makePayment" read-only="true" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="customerPaymentInformerTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="confirmPaymentToCustomer" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+     <tx:advice id="exchangeRateFetcherTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="fetchExchangeRates" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="providerHandlerProviderTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="placeOrder" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="900"/>
+        <!-- updateOrderStatus sometimes bails out if email reading is done at the same time, so let's -->
+        <!-- use a more lax isolation level for it. See also http://www.postgresql.org/docs/8.1/static/transaction-iso.html -->
+        <tx:method name="updateOrderStatus" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="600"/>
+        <tx:method name="cancelOrder" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+        <tx:method name="updateTechnicalSpecs" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+        <tx:method name="login" read-only="true" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+        <tx:method name="logout" read-only="true" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+        <tx:method name="updateProviderPrice" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="900"/>
+        <!-- The method ProviderHandler.getProductInfo might update the product state information of a certain -->
+        <!-- product and that change shouldn't be rolled back even if the outer transaction fails (nor should a -->
+        <!-- failure of this method make the outer transaction rollback), so therefore we use propagation="REQUIRES_NEW". -->
+        <!-- tx:method name="getProductInfo" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRES_NEW"
+            rollback-for="java.lang.Exception" timeout="900"/ -->
+         <tx:method name="updateConversationAtProvider" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+         <!-- NOTE: for addQuestionToProvider we do NOT define any transaction since this one is only -->
+         <!-- called from within existing transactions. -->
+         <!-- tx:method name="addQuestionToProvider" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/ -->
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="templateTesterTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="createTemplate" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="cmAdCreatorTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<!-- Fill items sometimes bails out when ran during a listitems session, so let's lower the isolation -->
+      	<!-- level for fillitems. -->
+      	<tx:method name="fillItem" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="1800"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="imageHelperTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="checkProductImages" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="900"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="feedbackGiverTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="givePositiveFeedback" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="500"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="feedbackReaderTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="readFeedback" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="500"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="faultyPaymentFixerTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="fixFaultyPayments" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="fixFaultyTransactions" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      	<tx:method name="generateCommonBill" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="consistencyCheckerTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="run" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="operatorSummaryCreatorTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="makeOperatorSummaryReport" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="refundsTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="refundToCustomer" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="categoryResolverThreadTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="work" read-only="true" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="housekeepingTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<!-- We need a quite long timeout for housekeeping, because before determining -->
+      	<!-- that a product is no longer for sale at provider, we need to check it -->
+      	<!-- several times using a delay in between. -->
+      	<tx:method name="housekeeping" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="600"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="moneyTransfererTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="transferToQD" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="paidAdsBookkeeperTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="createVerification" read-only="false" isolation="READ_COMMITTED" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="300"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="productScoreGeneratorTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<!-- Note: The method getBestSellingsAds should NOT be added here, since that -->
+      	<!-- method is supposed to be called from within some other transaction. -->
+      	<tx:method name="prefillSellingStatisticsWithValidAdIdsForListing" read-only="false"
+      		isolation="READ_COMMITTED" propagation="REQUIRED" rollback-for="java.lang.Exception" timeout="600"/>
+      </tx:attributes>
+    </tx:advice>
+    
+</beans>

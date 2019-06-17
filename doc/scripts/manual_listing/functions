@@ -1,0 +1,296 @@
+#
+# This file contains some helper functions for bash scripts.
+#
+# Copyright 2010 QD-Tech Oy
+# Author: John Bergbom
+
+#yournumber=10033
+#INTEGER_REGEXP="^[0-9]+$"
+DECIMAL_REGEXP="^[0-9]+([.][0-9]+)?$"
+
+function get_decimal() {
+  prompt_str=$1
+  while true; do
+    read -p "$prompt_str: " RETURN_VALUE
+    # Check if this is really a decimal
+    if [[ "$RETURN_VALUE" =~ $DECIMAL_REGEXP ]] ; then
+      break;
+    fi
+  done
+}
+
+function get_string() {
+  while true; do
+    read -p "$1: " RETURN_VALUE
+    if [ ! -z $RETURN_VALUE ]; then
+      break;
+    fi
+  done
+}
+
+function get_integer_with_default_and_max_and_min() {
+  prompt_str=$1
+  default_value=$2
+  min_val=$3
+  max_val=$4
+  #echo Lprompt: $prompt_str
+  #echo Ldefault: $default_value
+  #echo Lminval: $min_val
+  #echo Lmaxval: $max_val
+  while true; do
+    read -p "$prompt_str: " RETURN_VALUE
+    if [ -z $RETURN_VALUE ]; then
+      RETURN_VALUE=$default_value; break;
+    else
+      # Check if this is really an integer
+      #expr $RETURN_VALUE + 1 > /dev/null
+      #if [[ $? -ne 2 ]]; then #if integer
+      if [[ "$RETURN_VALUE" =~ $INTEGER_REGEXP ]] ; then
+        if [ $RETURN_VALUE -ge $min_val ] && [ $RETURN_VALUE -le $max_val ]; then
+          break;
+        fi
+      fi
+    fi
+  done
+}
+
+function get_integer() {
+  prompt_str=$1
+  while true; do
+    read -p "$prompt_str: " RETURN_VALUE
+    if [ ! -z $RETURN_VALUE ]; then
+      # Check if this is really an integer
+      #expr $RETURN_VALUE + 1 > /dev/null
+      #if [[ $? -ne 2 ]]; then #if integer
+      if [[ "$RETURN_VALUE" =~ $INTEGER_REGEXP ]] ; then
+        break;
+      fi
+    fi
+  done
+}
+
+function get_selection() {
+  prompt=$1
+  shift
+  i=1;
+  max=$#
+  while [ $i -le $max ]; do
+    echo "$i.)" $1
+    shift
+    i=`expr $i + 1`
+  done
+  get_integer_with_default_and_max_and_min "$prompt" 1 1 $max
+  choice=$RETURN_VALUE
+}
+
+function get_string_from_list() {
+  num=$1
+  for ((i = 1; i <= $num; i++))
+  do
+    shift
+  done
+  RETURN_VALUE=$1
+}
+
+#function log.debug($msg)
+function log.debug() {
+  echo `LANG="en_EN@euro" date "+%F %H:%M:%S"`" DEBUG: $1" >> $LOGFILE
+}
+
+#function log.error($msg)
+function log.error() {
+  echo `LANG="en_EN@euro" date "+%F %H:%M:%S"`" ERROR: $1" >> $LOGFILE
+}
+
+function create_dir_at_image_server() {
+  #date_str=`date +%F`
+  #img_dir=`echo $BASEDIR`"/"`echo $CURRDATE`"/images"
+  IMG_DIR="$BASEDIR/$CURRDATE/images"
+  img_serv_url="manual_listing/$CURRDATE/images"
+  img_serv_dir="/var/www/$img_serv_url"
+  #ssh ${img_serv_username}@sellstar.fi "mkdir -p /var/www/manual_listing"
+  #echo Creating directory for the images at the image server
+  log.debug "Creating directory for the images at the image server"
+  ssh sellstar.fi "mkdir -p $img_serv_dir"
+}
+
+#function handle_single_image($img_url, $img_serv_dir, $nbr_images_added, $img_serv_url)
+function handle_single_image() {
+  img_url_loc=$1
+  img_serv_dir_loc=$2
+  nbr_images_added_loc=$3
+  img_serv_url_loc=$4
+  filename=`echo $img_url_loc | sed 's/.*\///'`
+  #echo "Image url: $img_url_loc (filename: $IMG_DIR/$filename)"
+  log.debug "Image url: $img_url_loc (filename: $IMG_DIR/$filename)"
+  #echo "Fetching the image file to the local computer"
+  log.debug "Fetching the image file to the local computer"
+  wget "$img_url_loc" -O "$IMG_DIR/$filename" >> $LOGFILE 2>&1
+  #echo "Copying the image file to the image server"
+  log.debug "Copying the image file to the image server"
+  scp "$IMG_DIR/$filename" sellstar.fi:$img_serv_dir_loc/ > /dev/null       #$filename
+  if [[ $nbr_images_added_loc -gt 0 ]] && [[ `expr $nbr_images_added_loc % 4` = 0 ]]; then
+    IMAGE_HTML=$IMAGE_HTML`echo "</tr><tr>"`
+  fi
+  if [[ $nbr_images_added_loc -eq 0 ]]; then
+    FIRST_IMAGE_FILE=$IMG_DIR/$filename
+    log.debug "First image file: $FIRST_IMAGE_FILE"
+  fi
+  IMAGE_HTML=$IMAGE_HTML`echo "<td align='center'><div style='text-align:center;'><A HREF='http://www.sellstar.fi/$img_serv_url_loc/$filename' TARGET='_blank'><IMG WIDTH='130' SRC='http://www.sellstar.fi/$img_serv_url_loc/$filename' /></A><br/></div></td>"`
+}
+
+#function add_image_to_ad($market_sales_id, $image_file_name, $market_username, $market_password)
+function add_image_to_ad() {
+  market_sales_id_loc=$1
+  image_file_name=$2
+  market_username_loc=$3
+  market_password_loc=$4
+  #echo Sleeping for two seconds before adding the image
+  sleep 1.5
+  #echo Adding main image for the ad
+  log.debug "Adding main image for the ad"
+  #curl -D - --data-binary @$image_file_name --user $market_username_loc:$market_password_loc https://salattu.huuto.net/somt/0.9-beta/items/$market_sales_id_loc/images | tee tmp.txt
+  curl -D - --data-binary @$image_file_name --user $market_username_loc:$market_password_loc https://salattu.huuto.net/somt/0.9-beta/items/$market_sales_id_loc/images > tmp.txt 2>&1
+  cat tmp.txt >> $LOGFILE
+  grep -q "201 Created" tmp.txt
+  if [ $? = 0 ]; then
+    #echo "Adding of image succeeded for ad with market_sales_id = $market_sales_id_loc"
+    log.debug "Adding of image succeeded for ad with market_sales_id = $market_sales_id_loc"
+  else
+    echo "Error: Adding of image failed for ad with market_sales_id = $market_sales_id_loc"
+    log.error "Adding of image failed for ad with market_sales_id = $market_sales_id_loc"
+  fi
+}
+
+#function list_ad_to_market($ad_xml_filename, $market_username, $market_password, $PRODUCT_URL)
+function list_ad_to_market() {
+  ad_xml_filename_loc=$1
+  market_username_loc=$2
+  market_password_loc=$3
+  PRODUCT_URL_loc=$4
+  #echo "Listing ad to market"
+  log.debug "Listing ad to market"
+  #curl -D - --data @$ad_xml_filename_loc --user $market_username_loc:$market_password_loc https://salattu.huuto.net/somt/0.9-beta/items | tee tmp.txt
+  curl -D - --data @$ad_xml_filename_loc --user $market_username_loc:$market_password_loc https://salattu.huuto.net/somt/0.9-beta/items > tmp.txt 2>&1
+  cat tmp.txt >> $LOGFILE
+  grep -q "201 Created" tmp.txt
+  if [ $? = 0 ]; then
+    #echo Listing succeeded
+    location=`grep "^Location" tmp.txt`
+    market_sales_id=`echo $location | sed 's/.*\///' | tr -d -c [:digit:]`
+    if [ ! -z $market_sales_id ]; then
+      echo "Listing succeeded (market sales id = $market_sales_id)"
+      log.debug "Listing succeeded (market sales id = $market_sales_id)"
+      log.debug "Product and ad assignment: $market_sales_id, $PRODUCT_URL_loc"
+      if [ ! -z $FIRST_IMAGE_FILE ]; then
+        # Add the image
+        add_image_to_ad $market_sales_id $FIRST_IMAGE_FILE $market_username_loc $market_password_loc
+      else
+        echo "No image to add for the created ad"
+        log.debug "No image to add for the created ad"
+      fi
+    else
+      echo "Error: Market sales id for listed item not found"
+      log.error "Market sales id for listed item not found"
+    fi
+  else
+    echo "Error: Listing failed."
+    log.error "Listing failed."
+  fi
+}
+
+function generate_xml() {
+HTML_CONTENT=`(
+# Print product title
+echo "<tr><td><div><span style='font-size: 1.5em;'>$PRODUCT_TITLE</span></div></td></tr>"
+
+# Print summary
+echo "<tr><td></td></tr>"
+
+# Print product specification
+if [[ -n $PRODUCT_SPECIFICATION_HTML ]]; then
+  echo "<tr><td><br/><table cellspacing=\"0\" cellpadding=\"0\" border=\"3\">"
+  echo "<tbody><tr><td><table cellspacing=\"0\" cellpadding=\"3\" border=\"0\">"
+  echo "<tbody><tr><th bgcolor=\"#ffffcc\"><font face=\"Courier New Bold\">SPEKSIT</font></th></tr>"
+  echo "$PRODUCT_SPECIFICATION_HTML"
+  echo "</tbody></table></td></tr></tbody></table><br/></td></tr>"
+elif [[ -n $PRODUCT_SPECIFICATION ]]; then
+  echo "<tr><td>SPEKSIT</td></tr>"
+  echo "<tr><td>"
+  echo -e $PRODUCT_SPECIFICATION | grep -v ^$
+  echo "</td></tr>"
+fi
+
+# Print product description
+echo "<tr><td><br/><div>$PRODUCT_DESCRIPTION</div></td></tr>"
+
+# Print images
+# body += "<tr><td>" + this.formatImages(ad.getAdTemplate().getProduct().getImagesInOrder(), useImageHost) + "</td></tr>";
+echo "<tr><td><br/><table text-align='center' width='100%' cellspacing='1' cellpadding='5' border='outset' bgcolor='WHITE'>"
+echo "<tbody><tr bgcolor='#88bbff'><th colspan='5'>KUVIA TUOTTEESTA</th></tr>"
+echo "<tr><th colspan='5'>Klikkaamalla kuvia saat ne suurempina</th></tr>"
+echo "<tr>"
+echo "$IMAGE_HTML"
+echo "</tr></tbody></table>"
+echo "</td></tr>"
+
+# At the end (maybe not even necessary to have)
+#echo "<tr><td></td></tr>"
+
+# At the end
+#echo "</div></td></tr></tbody></table>"
+
+)`
+log.debug "Html content generated"
+
+TEXT_CONTENT=`(
+echo -e "$PRODUCT_TITLE \n\n"
+echo -e "Product description:\n\n$PRODUCT_DESCRIPTION\n\n"
+if [[ -n $PRODUCT_SPECIFICATION ]]; then
+  echo -e "Specification:\n\n"
+  echo -e $PRODUCT_SPECIFICATION | grep -v ^$
+  echo -e "\n"
+fi
+)`
+log.debug "Text content generated"
+
+FINAL_XML=`(cat <<EOF
+<?xml version="1.0"?>
+<entry xmlns="http://www.w3.org/2005/Atom" xmlns:huuto="http://dev.huuto.net/somt" xmlns:somt="http://somt.sanoma.fi/somt">
+<title>$PRODUCT_TITLE</title>
+<category scheme="http://api.huuto.net/somt/0.9-beta/categories/$CATEGORY"/>
+<content><![CDATA[
+EOF
+if [[ $USE_HTML_OUTPUT == "true" ]]; then
+  echo $HTML_CONTENT
+else
+  echo $TEXT_CONTENT
+fi
+cat <<EOF
+]]></content>
+<somt:intention type="$SELLING_TYPE"/>
+<somt:expirationTime>$EXPIRATION_TIME</somt:expirationTime>
+<somt:condition type="$PRODUCT_CONDITION"/>
+<somt:location>
+    <somt:city>$PRODUCT_LOCATION</somt:city>
+</somt:location>
+<somt:price>
+$PRICE_XML
+<somt:taxPercentage>$VAT_PERC</somt:taxPercentage>
+</somt:price>
+<somt:quantity>$QUANTITY</somt:quantity>
+<somt:buyerRequirements>
+    <huuto:verificationRequired>false</huuto:verificationRequired>
+</somt:buyerRequirements>
+<somt:deliveryMethods>
+    <somt:deliveryMethod cost="$SHIPPING_COST" currency="EUR" type="$DELIVERY_METHOD">
+    	<somt:description>$DELIVERY_DESCRIPTION</somt:description>
+    </somt:deliveryMethod>
+</somt:deliveryMethods>
+<somt:paymentMethods>
+    <somt:paymentMethod type="$PAYMENT_METHOD"/>
+</somt:paymentMethods>
+</entry>
+EOF
+)`
+}

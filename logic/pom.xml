@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>huutonet</artifactId>
+    <groupId>fi.jonix.huutonet</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <groupId>fi.jonix.huutonet</groupId>
+  <artifactId>logic</artifactId>
+  <version>0.0.6-SNAPSHOT</version>
+  <name>logic</name>
+  <description>This module contains the SellStar engine logics.</description>
+
+  <!-- This one tells where to commit the tagged release. -->
+  <scm>
+    <connection>scm:svn:http://sellstar.fi/svn/huuto/trunk/huutonet/logic</connection>
+    <!-- Possibly Nexus requires "url" to be defined. -->
+    <url>scm:svn:http://sellstar.fi/svn/huuto/trunk/huutonet/logic</url>
+  </scm>
+  
+	<!-- This one tells to which remote repository the versioned artifact will be uploaded. -->
+	<distributionManagement>
+		<repository>
+			<id>releases</id>
+			<url>http://www.sellstar.fi/nexus/content/repositories/releases</url>
+		</repository>
+	</distributionManagement>  
+
+	<dependencies>
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.1</version>
+		</dependency>
+		<dependency>
+			<groupId>fi.jonix.huutonet</groupId>
+			<artifactId>domain</artifactId>
+			<version>0.0.22-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.6.2</version>
+		</dependency>
+	</dependencies>
+	
+</project>

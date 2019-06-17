@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.5.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<!-- HSQLDB: -->
+		<property name="driverClassName" value="org.hsqldb.jdbcDriver" />
+		<property name="url" value="jdbc:hsqldb:mem:dao" />
+		<property name="username" value="sa" />
+		<property name="password" value="somepassword" />
+	</bean>
+
+	<bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop>
+				<prop key="hibernate.show_sql">false</prop>
+				<prop key="hibernate.format_sql">true</prop>
+				<!-- prop key="hibernate.hbm2ddl.auto">create</prop -->
+				<!-- prop key="hibernate.hbm2ddl.auto">update</prop -->
+				<prop key="hibernate.jdbc.batch_size">0</prop>
+				<prop key="hibernate.connection.pool_size">1</prop>
+			</props>
+		</property>
+		<property name="schemaUpdate" value="true"/>
+		<property name="annotatedClasses">
+			<list>
+				<value>fi.jonix.huutonet.domain.model.StateChange</value>
+				<value>fi.jonix.huutonet.domain.model.Provider</value>
+				<value>fi.jonix.huutonet.domain.model.Market</value>
+				<value>fi.jonix.huutonet.domain.model.Ad</value>
+				<value>fi.jonix.huutonet.domain.model.Product</value>
+				<value>fi.jonix.huutonet.domain.model.AdTemplate</value>
+				<value>fi.jonix.huutonet.domain.model.Image</value>
+				<value>fi.jonix.huutonet.domain.model.Settings</value>
+				<value>fi.jonix.huutonet.domain.model.Order</value>
+				<value>fi.jonix.huutonet.domain.model.Transaction</value>
+				<value>fi.jonix.huutonet.domain.model.Translation</value>
+				<value>fi.jonix.huutonet.domain.model.Email</value>
+			</list>
+		</property>
+	</bean>
+
+
+	<bean id="adDAO" class="fi.jonix.huutonet.domain.model.dao.AdDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="adTemplateDAO" class="fi.jonix.huutonet.domain.model.dao.AdTemplateDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="imageDAO" class="fi.jonix.huutonet.domain.model.dao.ImageDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="marketDAO" class="fi.jonix.huutonet.domain.model.dao.MarketDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="orderDAO" class="fi.jonix.huutonet.domain.model.dao.OrderDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="productDAO" class="fi.jonix.huutonet.domain.model.dao.ProductDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="providerDAO" class="fi.jonix.huutonet.domain.model.dao.ProviderDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="settingsDAO" class="fi.jonix.huutonet.domain.model.dao.SettingsDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="transactionDAO" class="fi.jonix.huutonet.domain.model.dao.TransactionDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+	
+	<bean id="translationDAO" class="fi.jonix.huutonet.domain.model.dao.TranslationDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="emailDAO" class="fi.jonix.huutonet.domain.model.dao.EmailDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+	
+    <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+      <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+    
+	<bean id="seleniumRobot" class="fi.jonix.huutonet.robot.SeleniumRobot">
+	</bean>
+	
+	<bean id="hBBankRobot" class="fi.jonix.huutonet.robot.bank.HBBankRobot">
+		<property name="seleniumRobot" ref="seleniumRobot" />
+		<property name="settingsDAO" ref="settingsDAO" />
+	</bean>
+	
+	<bean id="bankHelper" class="fi.jonix.huutonet.robot.bank.BankHelper">
+		<property name="seleniumRobot" ref="seleniumRobot" />
+		<property name="transactionDAO" ref="transactionDAO" />
+		<property name="bankRobot" ref="hBBankRobot" />
+		<property name="orderDAO" ref="orderDAO" />
+		<property name="settingsDAO" ref="settingsDAO" />
+	</bean>
+	
+	<bean id="faultyPaymentFixer" class="fi.jonix.huutonet.robot.bank.FaultyPaymentFixer">
+		<property name="orderDAO" ref="orderDAO" />
+		<property name="transactionDAO" ref="transactionDAO" />
+		<property name="settingsDAO" ref="settingsDAO" />
+	</bean>
+	
+    <aop:config>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.domain.model.dao.*DAOImpl.*(..))"
+        advice-ref="txAdvice"/>
+    </aop:config>
+    
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="*" propagation="REQUIRED" timeout="10"/>
+      </tx:attributes>
+    </tx:advice>
+    
+	<aop:config proxy-target-class="true" />
+
+    <aop:config>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.robot.bank.FaultyPaymentFixer.*(..))"
+        advice-ref="faultyPaymentFixerTxAdvice"/>
+      <aop:advisor
+        pointcut="execution(* fi.jonix.huutonet.robot.bank.BankHelper.*(..))"
+        advice-ref="bankHelperTxAdvice"/>
+    </aop:config>
+    
+    <tx:advice id="faultyPaymentFixerTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="fixFaultyPayments" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="500"/>
+      	<tx:method name="fixFaultyTransactions" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="500"/>
+      	<tx:method name="getEmailsToSend" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="500"/>
+      </tx:attributes>
+    </tx:advice>
+    
+    <tx:advice id="bankHelperTxAdvice" transaction-manager="transactionManager">
+      <tx:attributes>
+      	<tx:method name="addNewTransactionsToDB" read-only="false" isolation="SERIALIZABLE" propagation="REQUIRED"
+            rollback-for="java.lang.Exception" timeout="500"/>
+      </tx:attributes>
+    </tx:advice>
+    
+</beans>

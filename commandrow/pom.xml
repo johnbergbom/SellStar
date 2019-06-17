@@ -1,0 +1,149 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>huutonet</artifactId>
+		<groupId>fi.jonix.huutonet</groupId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>fi.jonix.huutonet</groupId>
+	<artifactId>commandrow</artifactId>
+	<name>commandrow</name>
+	<version>0.0.1-SNAPSHOT</version>
+	<description>Commandrow utilities for the huutonet application.
+	</description>
+
+	<dependencies>
+		<!-- dependency>
+		    <groupId>net.sf.jopt-simple</groupId>
+		    <artifactId>jopt-simple</artifactId>
+		    <version>3.2</version>
+	  </dependency -->
+		<dependency>
+            <groupId>com.google.translate</groupId>
+            <artifactId>google-api-translate-java</artifactId>
+            <version>0.92</version>
+        </dependency>
+		<dependency>
+			<groupId>fi.jonix.huutonet</groupId>
+			<artifactId>domain</artifactId>
+			<version>0.0.22-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>fi.jonix.huutonet</groupId>
+			<artifactId>robot</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-dbcp</groupId>
+			<artifactId>commons-dbcp</artifactId>
+			<version>1.2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.6.2</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>apache-log4j-extras</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<version>3.4.GA</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-annotations</artifactId>
+			<version>3.4.0.GA</version>
+		</dependency>
+		<dependency>
+			<groupId>dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+		<dependency>
+			<groupId>cglib</groupId>
+			<artifactId>cglib-nodep</artifactId>
+			<version>2.1_3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>1.3.2</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.lucene</groupId>
+		    <artifactId>lucene-core</artifactId>
+		    <version>3.0.1</version>
+		</dependency>
+	</dependencies>
+	
+	<properties>
+		<!-- environment can be "local" or "prod" -->
+		<environment>local</environment>
+	</properties>
+
+	<!-- By running the command "mvn assembly:assembly" a jar file containing -->
+	<!-- all dependencies will be built. Note that this command grabs the -->
+	<!-- domain-0.0.1-SNAPSHOT.jar and robot-0.0.1-SNAPSHOT.jar from the -->
+	<!-- local maven repository and not from the project version, so before -->
+	<!-- running "mvn assembly:assembly" a "mvn install" should be done for -->
+	<!-- the robot- and domain modules. -->
+
+	<profiles>
+		<profile>
+			<id>default</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<resources>
+					<resource>
+						<directory>src/main/resources</directory>
+					</resource>
+					<resource>
+						<directory>src/main/resources-${environment}</directory>
+					</resource>
+				</resources>
+				<plugins>
+					<plugin>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>copy-dependencies</goal>
+								</goals>
+								<configuration>
+									<outputDirectory>${project.build.directory}/lib
+									</outputDirectory>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<configuration>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+							<archive>
+								<manifest>
+									<mainClass>fi.jonix.huutonet.commandrow.Test</mainClass>
+									<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+								</manifest>
+							</archive>
+
+						</configuration>
+					</plugin>
+				</plugins>
+
+			</build>
+		</profile>
+	</profiles>
+
+</project>

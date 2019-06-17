@@ -1,0 +1,8 @@
+10 0 * * * /usr/local/huutonet/prod/scripts/backup.sh > /dev/null 2>&1
+15 7 * * 3 /usr/local/huutonet/prod/scripts/bookkeep_paid_ads.sh > /dev/null 2>&1
+45 7 * * 3 /usr/local/huutonet/prod/scripts/makerefunds.sh > /dev/null 2>&1
+15 8 * * * /usr/local/huutonet/prod/scripts/checkconsistency.sh > /dev/null 2>&1
+10 9 * * * /usr/local/huutonet/prod/scripts/feedback.sh > /dev/null 2>&1
+03 15 * * 1-5 /usr/local/huutonet/prod/scripts/fetchtransactions.sh > /dev/null 2>&1
+05 1 * * * /usr/local/huutonet/prod/scripts/fetchexchangerates.sh > /dev/null 2>&1
+05 0 * * * /usr/local/huutonet/prod/scripts/createoperatorsummaryreport.sh > /dev/null 2>&1

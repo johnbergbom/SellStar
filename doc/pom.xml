@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>huutonet</artifactId>
+		<groupId>fi.jonix.huutonet</groupId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>fi.jonix.huutonet</groupId>
+	<artifactId>doc</artifactId>
+	<name>doc</name>
+	<version>0.0.1-SNAPSHOT</version>
+	<description>Documentation</description>
+
+	<!-- By running the command "mvn hibernate3:hbm2ddl" the sql create clauses -->
+	<!-- for the database will be created and put in the file target//hibernate3/sql/database-autogen.sql -->
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>hibernate3-maven-plugin</artifactId>
+        <version>2.2</version>
+        <configuration>
+          <components>
+            <component>
+              <name>hbm2ddl</name>
+              <implementation>jdbcconfiguration</implementation>
+            </component>
+            <component>
+              <name>hbm2hbmxml</name>
+              <outputDirectory>src/main/resources</outputDirectory>
+            </component>
+          </components>
+          <componentProperties>
+            <drop>false</drop>
+            <format>true</format>
+            <create>false</create>
+            <export>false</export>
+            <configurationfile>hbm2ddl-hibernate.cfg.xml</configurationfile>
+            <outputfilename>/database-autogen.sql</outputfilename>
+            <namingstrategy>org.hibernate.cfg.ImprovedNamingStrategy</namingstrategy>
+          </componentProperties>
+        </configuration>
+		<dependencies>
+			<dependency>
+				<groupId>postgresql</groupId>
+				<artifactId>postgresql</artifactId>
+				<version>8.2-507.jdbc4</version>
+				<!-- scope>provided</scope -->
+			</dependency>
+		</dependencies>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -1,0 +1,67 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-2.5.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+	
+	<tx:annotation-driven proxy-target-class="true" />
+	
+	<bean id="baseAdCreator" class="fi.jonix.huutonet.robot.lister.BaseAdCreator">
+		<property name="name" value="baseAdCreator" />
+		<property name="version" value="1.0" />
+		<property name="templateGenerator" ref="templateGenerator" />
+		<property name="settingsDAO" ref="settingsDAO" />
+	</bean>
+	
+	<bean id="templateGenerator" class="fi.jonix.huutonet.robot.lister.BasicTemplateGenerator">
+	</bean>
+	
+	<bean id="itemLister" class="fi.jonix.huutonet.robot.lister.ItemLister">
+		<property name="adTemplateDAO" ref="adTemplateDAO" />
+		<property name="adCreator" ref="baseAdCreator" />
+		<property name="dealExtremeProvider" ref="dealExtremeProvider" />
+		<property name="currencyChecker" ref="currencyChecker" />
+		<property name="imageUploader" ref="imageUploader" />
+		<property name="adDAO" ref="adDAO" />
+		<property name="huutonetLister" ref="huutonetLister" />
+	</bean>
+	
+	<bean id="seleniumRobot" class="fi.jonix.huutonet.robot.SeleniumRobot">
+	</bean>
+	
+	<bean id="hBBankRobot" class="fi.jonix.huutonet.robot.bank.HBBankRobot">
+		<property name="seleniumRobot" ref="seleniumRobot" />
+	</bean>
+	
+	<bean id="currencyChecker" class="fi.jonix.huutonet.robot.lister.CurrencyChecker">
+	</bean>
+	
+	<bean id="huutonetLister" class="fi.jonix.huutonet.robot.lister.HuutonetLister">
+		<property name="seleniumRobot" ref="seleniumRobot" />
+		<property name="marketDAO" ref="marketDAO" />
+	</bean>
+	
+	<bean id="dealExtremeProvider" class="fi.jonix.huutonet.robot.order.DealExtremeProvider">
+		<property name="seleniumRobot" ref="seleniumRobot" />
+	</bean>
+	
+	<!-- aop:config>
+		<aop:advisor
+			pointcut="execution(* fi.jonix.huutonet.commandrow.TestBean.*(..))"
+			advice-ref="crTxAdvice" />
+		<aop:advisor pointcut="execution(* fi.jonix.huutonet.tools.Helper.*(..))"
+			advice-ref="crTxAdvice" />
+	</aop:config>
+
+	<tx:advice id="crTxAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="*" propagation="REQUIRED" timeout="10" />
+		</tx:attributes>
+	</tx:advice-->
+
+</beans>

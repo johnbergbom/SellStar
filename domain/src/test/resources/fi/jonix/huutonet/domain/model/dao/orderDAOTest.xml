@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset>
+
+	<provider id="1" name="dealextreme" url="www" currency="2" />
+	
+	<market id="1" name="huutonet" url="www" currency="1" />
+	
+	<product id="1" created_timestamp="2010-01-01" provider_id="1" provider_prod_id="sku.1" provider_category="cat" name="test" technical_specs="specs" />
+	
+	<adtemplate id="1" product_id="1" market_id="1" active="true" bean_name="test" quantity="1" headline="headline" category="1" sub_category="1" open_days="10" location="Hong Kong" classification="1" payment_way="1" shipping_way="1" shipping_desc="desc" min_bid_increase_mc="1.0" min_bid_increase_euro="1.0" summary="summary" technical_specs="specs" details="details" slogan="slogan" added_by="lauber"/>
+	
+	<ad id="1" ad_template_id="1" market_sales_id="1" market_id="1" sales_type="1" start_price_mc="10.0" start_price_euro="10.0" price_euro="10.0" min_selling_price_mc="10.0" min_selling_price_euro="10.0" prov_price_at_listing_pc="10.0" prov_price_at_listing_euro="10.0" shipping_cost_mc="0.1" shipping_cost_euro="0.1" used_bean_name="test" used_bean_version="1.0" date_to_market="2010-04-30" date_from_market="2010-05-01" confirmed="true" />
+	
+	<orders id="1" ad_id="1" state="6" reference="1" prov_order_id="1" transaction_id="1" tracking_code="1" login_name="name1" first_name="firstName1" last_name="lastName1" address="example street 1"  phone_number="+358000001" city="Helsinki" postcode="00100" email="name1.last@example.com" fin_sp_mc="10.000" fin_sp_euro="10.000" feedback_given="true" paid_too_much="false" />
+	<orders id="2" ad_id="1" state="9" reference="2" prov_order_id="2" transaction_id="2" tracking_code="2" login_name="name1" first_name="firstName1" last_name="lastName1" address="example street 1"  phone_number="+358000001" city="Helsinki" postcode="00100" email="name1.last@example.com" fin_sp_mc="10.000" fin_sp_euro="10.000" feedback_given="false" paid_too_much="false" />
+	<orders id="3" ad_id="1" state="3" reference="3" prov_order_id="3" transaction_id="3" tracking_code="3" login_name="name1" first_name="firstName1" last_name="lastName1" address="example street 1"  phone_number="+358000001" city="Helsinki" postcode="00100" email="name1.last@example.com" fin_sp_mc="10.000" fin_sp_euro="10.000" feedback_given="false" paid_too_much="false" />
+	<orders id="4" ad_id="1" state="2" reference="4" prov_order_id="4" transaction_id="4" tracking_code="4" login_name="name1" first_name="firstName1" last_name="lastName1" address="example street 1"  phone_number="+358000001" city="Helsinki" postcode="00100" email="name1.last@example.com" fin_sp_mc="10.000" fin_sp_euro="10.000" feedback_given="false" paid_too_much="false" />
+	<orders id="5" ad_id="1" state="8" reference="5" prov_order_id="5" transaction_id="5" tracking_code="5" login_name="name1" first_name="firstName1" last_name="lastName1" address="example street 1"  phone_number="+358000001" city="Helsinki" postcode="00100" email="name1.last@example.com" fin_sp_mc="10.000" fin_sp_euro="10.000" feedback_given="false" paid_too_much="false" />
+	<orders id="6" ad_id="1" state="1" reference="6" prov_order_id="6" transaction_id="6" tracking_code="6" login_name="name1" first_name="firstName1" last_name="lastName1" address="example street 1"  phone_number="+358000001" city="Helsinki" postcode="00100" email="name1.last@example.com" fin_sp_mc="10.000" fin_sp_euro="10.000" feedback_given="false" paid_too_much="false" />
+	<orders id="7" ad_id="1" state="7" reference="7" prov_order_id="7" transaction_id="7" tracking_code="7" login_name="name1" first_name="firstName1" last_name="lastName1" address="example street 1"  phone_number="+358000001" city="Helsinki" postcode="00100" email="name1.last@example.com" fin_sp_mc="10.000" fin_sp_euro="10.000" feedback_given="true" paid_too_much="false" />
+	<orders id="8" ad_id="1" state="0" reference="8" prov_order_id="8" transaction_id="8" tracking_code="8" login_name="name1" first_name="firstName1" last_name="lastName1" address="example street 1"  phone_number="+358000001" city="Helsinki" postcode="00100" email="name1.last@example.com" fin_sp_mc="10.000" fin_sp_euro="10.000" feedback_given="false" paid_too_much="false" />
+	<orders id="9" ad_id="1" state="0" reference="9" prov_order_id="9" transaction_id="9" tracking_code="9" login_name="name1" first_name="firstName1" last_name="lastName1" address="example street 1"  phone_number="+358000001" city="Helsinki" postcode="00100" email="name1.last@example.com" fin_sp_mc="10.000" fin_sp_euro="10.000" feedback_given="false" paid_too_much="false" />
+	<orders id="10" ad_id="1" state="0" reference="10" prov_order_id="10" transaction_id="10" tracking_code="10" login_name="name1" first_name="firstName1" last_name="lastName1" address="example street 1"  phone_number="+358000001" city="Helsinki" postcode="00100" email="name1.last@example.com" fin_sp_mc="10.000" fin_sp_euro="10.000" feedback_given="false" paid_too_much="false" />
+	
+	<state_changes id="11" order_id="1" state="1" update_date="2010-05-01" />
+	<state_changes id="12" order_id="1" state="8" update_date="2010-05-02" />
+	<state_changes id="13" order_id="1" state="2" update_date="2010-05-03" />
+	<state_changes id="14" order_id="1" state="3" update_date="2010-05-04" />
+	<state_changes id="15" order_id="1" state="9" update_date="2010-05-05" />
+	<state_changes id="16" order_id="1" state="6" update_date="2010-05-06" />
+	<state_changes id="21" order_id="2" state="1" update_date="2010-05-01" />
+	<state_changes id="22" order_id="2" state="8" update_date="2010-05-02" />
+	<state_changes id="23" order_id="2" state="2" update_date="2010-05-03" />
+	<state_changes id="24" order_id="2" state="3" update_date="2010-05-04" />
+	<state_changes id="25" order_id="2" state="9" update_date="2010-05-05" />
+	<state_changes id="31" order_id="3" state="1" update_date="2010-05-01" />
+	<state_changes id="32" order_id="3" state="8" update_date="2010-05-02" />
+	<state_changes id="33" order_id="3" state="2" update_date="2010-05-03" />
+	<state_changes id="34" order_id="3" state="3" update_date="2010-05-04" />
+	<state_changes id="41" order_id="4" state="1" update_date="2010-05-01" />
+	<state_changes id="42" order_id="4" state="8" update_date="2010-05-02" />
+	<state_changes id="43" order_id="4" state="2" update_date="2010-05-03" />
+	<state_changes id="51" order_id="5" state="1" update_date="2010-05-01" />
+	<state_changes id="52" order_id="5" state="8" update_date="2010-05-02" />
+	<state_changes id="61" order_id="6" state="1" update_date="2010-05-01" />
+	<state_changes id="71" order_id="7" state="1" update_date="2010-05-01" />
+	<state_changes id="72" order_id="7" state="8" update_date="2010-05-02" />
+	<state_changes id="73" order_id="7" state="2" update_date="2010-05-03" />
+	<state_changes id="74" order_id="7" state="3" update_date="2010-05-04" />
+	<state_changes id="75" order_id="7" state="9" update_date="2010-05-05" />
+	<state_changes id="76" order_id="7" state="6" update_date="2010-05-06" />
+	<state_changes id="77" order_id="7" state="7" update_date="2010-05-07" />
+	
+</dataset>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.5.xsd">
+
+	<bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</prop>
+				<prop key="hibernate.show_sql">false</prop>
+				<prop key="hibernate.format_sql">true</prop>
+				<!-- prop key="hibernate.hbm2ddl.auto">create</prop -->
+				<!-- prop key="hibernate.hbm2ddl.auto">update</prop -->
+				<prop key="hibernate.jdbc.batch_size">0</prop>
+				<prop key="hibernate.connection.pool_size">1</prop>
+			</props>
+		</property>
+		<property name="annotatedClasses">
+			<list>
+				<value>fi.jonix.huutonet.domain.model.Category</value>
+				<value>fi.jonix.huutonet.domain.model.CategoryMapping</value>
+				<value>fi.jonix.huutonet.domain.model.Provider</value>
+				<value>fi.jonix.huutonet.domain.model.Market</value>
+				<value>fi.jonix.huutonet.domain.model.Ad</value>
+				<value>fi.jonix.huutonet.domain.model.Product</value>
+				<value>fi.jonix.huutonet.domain.model.AdTemplate</value>
+				<value>fi.jonix.huutonet.domain.model.Image</value>
+				<value>fi.jonix.huutonet.domain.model.Settings</value>
+				<value>fi.jonix.huutonet.domain.model.Order</value>
+				<value>fi.jonix.huutonet.domain.model.Transaction</value>
+				<value>fi.jonix.huutonet.domain.model.Translation</value>
+				<value>fi.jonix.huutonet.domain.model.Email</value>
+				<value>fi.jonix.huutonet.domain.model.StateChange</value>
+				<value>fi.jonix.huutonet.domain.model.Customer</value>
+				<value>fi.jonix.huutonet.domain.model.ProductKeyword</value>
+				<value>fi.jonix.huutonet.domain.model.LoginName</value>
+				<value>fi.jonix.huutonet.domain.model.User</value>
+				<value>fi.jonix.huutonet.domain.model.Seller</value>
+				<value>fi.jonix.huutonet.domain.model.SellerMarket</value>
+				<value>fi.jonix.huutonet.domain.model.Message</value>
+				<value>fi.jonix.huutonet.domain.model.SystemEmail</value>
+				<value>fi.jonix.huutonet.domain.model.OrderBundle</value>
+				<value>fi.jonix.huutonet.domain.model.Tracking</value>
+				<value>fi.jonix.huutonet.domain.model.ErrorTracking</value>
+				<value>fi.jonix.huutonet.domain.model.ProviderQuestion</value>
+				<value>fi.jonix.huutonet.domain.model.Currency</value>
+				<value>fi.jonix.huutonet.domain.model.Verification</value>
+			</list>
+		</property>
+	</bean>
+
+
+	<bean id="categoryDAO" class="fi.jonix.huutonet.domain.model.dao.CategoryDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="categoryMappingDAO" class="fi.jonix.huutonet.domain.model.dao.CategoryMappingDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="adDAO" class="fi.jonix.huutonet.domain.model.dao.AdDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="adTemplateDAO" class="fi.jonix.huutonet.domain.model.dao.AdTemplateDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="imageDAO" class="fi.jonix.huutonet.domain.model.dao.ImageDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="marketDAO" class="fi.jonix.huutonet.domain.model.dao.MarketDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="orderDAO" class="fi.jonix.huutonet.domain.model.dao.OrderDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="productDAO" class="fi.jonix.huutonet.domain.model.dao.ProductDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="providerDAO" class="fi.jonix.huutonet.domain.model.dao.ProviderDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="settingsDAO" class="fi.jonix.huutonet.domain.model.dao.SettingsDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="transactionDAO" class="fi.jonix.huutonet.domain.model.dao.TransactionDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+	
+	<bean id="translationDAO" class="fi.jonix.huutonet.domain.model.dao.TranslationDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="emailDAO" class="fi.jonix.huutonet.domain.model.dao.EmailDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+	
+	<bean id="customerDAO" class="fi.jonix.huutonet.domain.model.dao.CustomerDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+	
+	<bean id="productKeywordDAO" class="fi.jonix.huutonet.domain.model.dao.ProductKeywordDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="loginNameDAO" class="fi.jonix.huutonet.domain.model.dao.LoginNameDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="sellerDAO" class="fi.jonix.huutonet.domain.model.dao.SellerDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="sellerMarketDAO" class="fi.jonix.huutonet.domain.model.dao.SellerMarketDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="userDAO" class="fi.jonix.huutonet.domain.model.dao.UserDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="messageDAO" class="fi.jonix.huutonet.domain.model.dao.MessageDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="orderBundleDAO" class="fi.jonix.huutonet.domain.model.dao.OrderBundleDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="trackingDAO" class="fi.jonix.huutonet.domain.model.dao.TrackingDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="errorTrackingDAO" class="fi.jonix.huutonet.domain.model.dao.ErrorTrackingDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="providerQuestionDAO" class="fi.jonix.huutonet.domain.model.dao.ProviderQuestionDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="currencyDAO" class="fi.jonix.huutonet.domain.model.dao.CurrencyDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+	<bean id="verificationDAO" class="fi.jonix.huutonet.domain.model.dao.VerificationDAOImpl">
+		<property name="hibernateTemplate" ref="hibernateTemplate" />
+	</bean>
+
+</beans>

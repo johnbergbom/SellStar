@@ -1,0 +1,206 @@
+For getting status messages: as operator send an empty email to SellStar with
+the subject "status".
+
+For getting detailed product sales statistics (for last month): as operator send an empty
+email to SellStar with the subject "product statistics".
+
+For resending an order to the customer:
+  Send an email to SellStar with the subject "Resend order" containing
+  the tag <ORDER_TO_RESEND>comma_separated_list_of order_ids_to_resend</ORDER_TO_RESEND>.
+  Note: a "Resend order" can be done only ONCE per bundle, so if you want to resend
+  several products in the same bundle, then you need to add all the orders to resend
+  at once as a comma separated list. (The only exception is if placeOrders hasn't been
+  ran, then other orders in the same bundle can later be added for resending.) The
+  reason for allowing resending only once per bundle is that we don't want to pay
+  several times for shipping of the resending. The operator doesn't need to remember
+  these cases. Rather the OperatorProcessor simply refuses to perform the wanted
+  action if the right conditions aren't fulfilled, and informs the operator about it.
+    If the customer returned the product(s) to us, then we can refund the money he
+  paid for sending the product to us by adding the following tag:
+  <CUSTOMER_SHIPPING_COST>sum</CUSTOMER_SHIPPING_COST> (by default no shipping cost
+  is refunded if the CUSTOMER_SHIPPING_COST-tag is missing).
+
+
+
+For paying the money back to the customer although the product has already been shipped:
+  Send an email to SellStar with the subject "Refund sent order" containing
+  the tag <SENT_ORDER_TO_REFUND>id_of_order_to_refund</SENT_ORDER_TO_REFUND>
+  => if we in addition need to refund the shipping cost for the customer if he
+  returned the product to us, then add the following tag as well:
+  <CUSTOMER_SHIPPING_COST>sum</CUSTOMER_SHIPPING_COST>
+  (by default no shipping cost is refunded if the CUSTOMER_SHIPPING_COST-tag is missing)
+  
+  
+  
+If a question has been manually added to FocalPrice and we want to add this conversation to SellStar:
+  send an email to SellStar with the subject "Add provider conversation to SellStar" containing
+  the tag <ORDER_BUNDLE>order_bundle_id</ORDER_BUNDLE> or <PROVIDER_ORDER_ID>provider_order_id</PROVIDER_ORDER_ID>
+
+
+
+For running fetchtransactions manually:
+cd commandrow/target/classes/ ; java -cp ../lib/*:. fi/jonix/huutonet/commandrow/Test fetchtransactions \
+`cat /tmp/bankcodes.txt`; cd ../../../
+
+For running placeorders manually:
+cd commandrow/target/classes/ ; java -cp ../lib/*:. fi/jonix/huutonet/commandrow/Test placeorders \
+`cat /tmp/paypalcodes.txt`; cd ../../../
+
+For making a production build:
+mvn -DskipTests -Denvironment=prod clean package && cd domain && mvn -DskipTests install && cd ../logic && mvn -DskipTests install && cd ../robot && mvn -DskipTests install && cd ../commandrow && mvn -DskipTests assembly:assembly && cd ..
+
+For compiling and running right away without making a jar package:
+mvn -Dmaven.test.skip=true clean package && cd commandrow/target/classes/ && java -cp ../lib/*:. fi.jonix.huutonet.commandrow.Test blabla && cd ../../../
+
+For moving adtemplates from one seller to another:
+Update adtemplate.seller_id for the ones that you want to move.
+IMPORTANT: Do NOT move orders from one seller to another, because that screws up readfeedback and givefeedback.
+Note: maybe it's a good idea to mark the adtemplates as inactive first and then when they have all closed (five days later)
+the adtemplates can be moved without any problem (if moving them before they have closed, then the email processor will complain).
+Something like this can be used: update adtemplate set seller_id = 2 where product_id in (select id from product where provider_id = 2);
+
+Common problems:
+
+1.) Encoding problems: if the scandinavian characters shows up
+    correctly in the database, then everything is fine (even if
+    the scandics show up distortedly on the console it could still
+    be correct in the database).
+    For user3 the following seems to work: "--encoding cp850"
+    (for user3 this worked when user1 made the binary on Linux,
+    not tested if it works also if user4 compiles the binary)
+    For user4 the following works: "--encoding Cp1252"
+
+
+The following ~/.m2/settings.xml can be used:
+<settings>
+  <servers>
+    <!-- This one is used for deploying a new version to nexus, not needed for downloading/building. -->
+    <server>
+      <id>releases</id>
+      <username>someuser</username>
+      <password>somepassword</password>
+    </server>
+  </servers>
+  <mirrors>
+    <mirror>
+      <!--This sends everything else to /public -->
+      <id>nexus</id>
+      <mirrorOf>*</mirrorOf>
+      <url>http://www.sellstar.fi/nexus/content/groups/public</url>
+    </mirror>
+  </mirrors>
+  <profiles>
+    <profile>
+      <id>nexus</id>
+      <!--Enable snapshots for the built in central repo to direct -->
+      <!--all requests to nexus via the mirror -->
+      <repositories>
+        <repository>
+          <id>central</id>
+          <url>http://central</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+      </repositories>
+     <pluginRepositories>
+        <pluginRepository>
+          <id>central</id>
+          <url>http://central</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>true</enabled></snapshots>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <!--make the profile active all the time -->
+    <activeProfile>nexus</activeProfile>
+  </activeProfiles>
+</settings>
+
+
+För att releasa en ny version av domain till nexus:
+cd domain
+mvn release:prepare
+mvn release:perform
+
+
+Dealing with operation problems:
+--------------------------------
+
+Ordering problem:
+These can be of three different types:
+
+UPDATE: BEFORE DELETING AN UNPAID ORDER WE NEED TO CHECK IF IT WAS ACTUALLY PAID FOR (IN SOME CASES
+THE ORDER _WAS_ INDEED PAID FOR ALTHOUGH IT SHOWS UP AT FOCAL PRICE AS UNPAID.
+
+1.) "Operation problem: Possibly Unpaid order at FocalPrice"
+    This one is simple to handle, because in this case we know that the order didn't go through at
+    FocalPrice and the transaction was rolled back in the database, so the only thing we need to do
+    is to manually log on to FocalPrice and remove the unpaid order (if any).
+2.) "Operation problem: Ordering problem - check manually"
+    In this case SellStar couldn't find out if the order went through or not and the transaction
+    wasn't rolled back. Rather the order(s) of the bundle were set to state otherError (340). Check
+    if the order still went through (if there is an unpaid order at FocalPrice having the correct
+    price and products and there are no unprocessed PayPal payments in the mailbox of
+    someuser@gmail.com ("Receipt for Your Payment to FocalPrice Inc."), then we conclude that
+    the order didn't go through).
+    a.) If order didn't go through:
+	    i.) for each order that's in state otherError { //IMPORTANT: some orders might be canceled and those ones should _NOT_ be touched!!
+	          Check what states the order was in _before_ it got into state otherError (using the state_changes table)
+	          if (${previous_state} == 140 || ${previous_state} == 180) {
+	            update orders set state = ${previous_state}, fin_pp_pc_inc_vat = null, fin_pp_pc_exc_vat = null, fin_pp_euro_inc_vat = null, fin_pp_euro_exc_vat = null, send_count = 0, provider_vat_perc = null where id = ${order_id};
+	          } else if (${previous_state} == 160) {
+	            if (order.sendCount > 2) {
+	              //inform John, something is wrong
+	            } else {
+	              update orders set state = ${previous_state}, send_count = 1, resend_loss_euro = 0 where id = ${order_id};
+	            }
+	          }
+	          insert into state_changes (id,state,update_date,order_id) values (nextval('state_change_id_seq'),${previous_state},'now',${order_id});
+	        }
+	    ii.) for bundle:
+	          if (${previous_state} == 140 || ${previous_state} == 180) {
+	            update order_bundle set prov_order_id = null, paypal_id = null, prov_ship_pc_inc_vat = null, prov_ship_pc_exc_vat = null, prov_ship_euro_inc_vat = null, prov_ship_euro_exc_vat = null, provider_ship_vat_perc = null where id = ${bundle_id};
+	          } else if (${previous_state} == 160) {
+	            update order_bundle set prov_order_id = null, paypal_id = null, resend_loss_euro = 0 where id = ${bundle_id};
+	          }
+    b.) else if order did go through:
+        i.) manually log on to FocalPrice and find an order which has an orderId which doesn't exist in the database
+            and make sure the total price and the products match what we expect
+        ii.) update order_bundle set prov_order_id = ${unknown_provider_order_id_at_focalprice_gotten_above} where id = ${bundle_id};
+        iii.) find an unprocessed "Receipt for Your Payment to FocalPrice Inc." from the mailbox of someuser@gmail.com
+              that matches the expected sum to pay, and extract the payPalId from "Invoice ID:"
+        iv.) update order_bundle set paypal_id = ${payPalId_gotten_above} where id = ${bundle_id};
+        NOTE: in some cases (for multi-order bundles) the order_bundle.prov_order_id can actually be set to the correct
+        value, so in these cases it's enough to do step iii.) and iv.) above.
+3.) "Error report: Error performing placeorders"
+    If the order placement went through at the provider but the database update in SellStar failed, for example because
+    of transaction timeout, then we need to do the following:
+    update order_bundle set prov_order_id = ${provider_order_id}, paypal_id = ${provider_order_id}, prov_ship_pc_inc_vat = 1.70, prov_ship_euro_inc_vat = xxx, prov_ship_pc_exc_vat = 1.70, prov_ship_euro_exc_vat = xxx, provider_ship_vat_perc = 0.00 where id = ${bundle_id};
+    update orders set state = 220, send_count = 1, fin_pp_pc_inc_vat = yyy, fin_pp_euro_inc_vat = zzz, fin_pp_euro_exc_vat = zzz, fin_pp_pc_exc_vat = yyy, provider_vat_perc = 0.00 where id = ${order_id};
+    insert into state_changes (id,state,update_date,order_id) values (nextval('state_change_id_seq'),220,'now',${order_id});
+
+Huutonet API:
+-------------
+The Huutonet API is described here: http://dev.huuto.net/huuto-api/
+
+Huutonet doesn't provide any xsd files for their service (xjc, the JAXB schema compiler can create java classes out of xsd files).
+However there is a program Trang (http://www.thaiopensource.com/relaxng/trang.html) that can create an xsd based on a sample xml-file.
+So for generating JAXB compatible java source files, do the following steps:
+1.) Fetch a sample xml file from huutonet (example): curl http://api.huuto.net/somt/0.8/items/214641608 > sample.xml
+2.) Run: java -jar trang.jar -I xml -O xsd sample.xml generated.xsd
+3.) Run: xjc -p fi.jonix.my.java.package.name generated.xsd
+
+The files in the java package fi.jonix.huutonet.market.huuto.xml.ad were generated based on the xml we get when fetching
+information regarding a listed ad. The same java files can be used also for listing and for getting public information
+regarding a Huutonet user. The only exception is that you don't get information about whether Huutonet user ABC is an
+individual or a company, because the tag '<somt:userType type="private"/>' is not in the xml describing an ad (which we
+used for generating these files). If we at some point need information individual/company of some user, then we can
+fetch a new samle.xml and ad the tag '<somt:userType type="private"/>' to it manually, then generate a new xsd and from
+the xsd we can generate new java files.
+
+The files in the java package fi.jonix.huutonet.market.huuto.xml.ad can NOT be used for API calls that return several
+items, such as "get all open ads of user ABC" or "get all open ads of category XYZ", because the xml for several items
+start with a <feed>-tag. So for these ones we would probably need a separate java package with separate java files (if
+we ever need to fetch this kind of information using the API).

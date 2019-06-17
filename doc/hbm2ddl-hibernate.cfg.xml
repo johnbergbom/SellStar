@@ -1,0 +1,28 @@
+<!DOCTYPE hibernate-configuration PUBLIC
+	"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+ 
+<hibernate-configuration>
+	<session-factory>
+      <property name="dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+      <property name="connection.url">jdbc:postgresql://localhost:5432/huutonet</property>
+      <property name="connection.username">dbusername</property>
+      <property name="connection.password">somepass</property>
+      <property name="connection.driver_class">org.postgresql.Driver</property>
+      <property name="show_sql">false</property>
+      <property name="generate_statistics">false</property>
+      <mapping class="fi.jonix.huutonet.domain.model.Ad"/>
+      <mapping class="fi.jonix.huutonet.domain.model.AdTemplate"/>
+      <mapping class="fi.jonix.huutonet.domain.model.Email"/>
+      <mapping class="fi.jonix.huutonet.domain.model.Image"/>
+      <mapping class="fi.jonix.huutonet.domain.model.Market"/>
+      <mapping class="fi.jonix.huutonet.domain.model.Order"/>
+      <mapping class="fi.jonix.huutonet.domain.model.Product"/>
+      <mapping class="fi.jonix.huutonet.domain.model.Provider"/>
+      <mapping class="fi.jonix.huutonet.domain.model.Settings"/>
+      <mapping class="fi.jonix.huutonet.domain.model.Transaction"/>
+      <mapping class="fi.jonix.huutonet.domain.model.Translation"/>
+ 
+	</session-factory>
+</hibernate-configuration>
+
